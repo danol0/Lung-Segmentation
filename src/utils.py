@@ -5,7 +5,7 @@ import torch
 import pickle
 
 
-def DSC(pred, target, binary=True):
+def DSC(pred, target, binary=True, eps=1e-8):
     """
     Calculate the dice similarity coefficient for a batch of predictions and targets.
 
@@ -21,7 +21,7 @@ def DSC(pred, target, binary=True):
     pred = (pred > 0.5).float() if binary else pred
     numer = (pred * target).sum(dim=(2, 3))
     denom = pred.sum(dim=(2, 3)) + target.sum(dim=(2, 3))
-    return (2 * numer) / (denom + 1e-8)
+    return (2 * numer + eps) / (denom + eps)
 
 
 def binary_accuracy(pred, target):

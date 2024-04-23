@@ -70,29 +70,13 @@ class CombinedLoss(nn.Module):
         self.lambda_BCE = lambda_BCE
 
     def forward(self, pred, target):
-        bce_loss = self.binary_cross_entropy(pred, target)
-        dice_loss = self.dice_loss(pred, target)
-
-        mask = target.sum(dim=(2, 3)) == 0
-
-        # Apply loss conditionally based on the mask
-        loss = torch.where(
-            mask,
-            self.lambda_DSC * bce_loss,
-            self.lambda_DSC * dice_loss + self.lambda_BCE * bce_loss,
-        )
-
-        return loss.mean()
+        return (
+            self.lambda_BCE * F.binary_cross_entropy_with_logits(pred, target)
+            + self.lambda_DSC * self.dice_loss(pred, target)
+        ).mean()
 
     def dice_loss(self, pred, target):
-        return 1 - DSC(pred, target, binary=False)
-
-    def binary_cross_entropy(self, pred, target):
-        # Compute the binary cross entropy loss for each item in the batch
-
-        return F.binary_cross_entropy_with_logits(pred, target, reduction="none").mean(
-            dim=(2, 3)
-        )
+        return (1 - DSC(pred, target, binary=False)).mean()
 
 
 class UNet(nn.Module):
